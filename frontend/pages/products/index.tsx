@@ -45,7 +45,7 @@ export default function ProductsPage() {
       <ul>
         {items.map((p) => (
           <li key={p.id} style={{ marginBottom: 10 }}>
-            <Link href={`/products/${p.id}`}><a><strong>{p.title}</strong></a></Link>
+            <Link href={`/products/${p.id}`}><strong>{p.title}</strong></Link>
             <div>${p.price.toFixed(2)}</div>
             <div style={{ color: '#666' }}>{p.description}</div>
           </li>
