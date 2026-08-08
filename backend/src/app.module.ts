@@ -1,17 +1,8 @@
 import { Module } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
+import { PrismaModule } from './prisma/prisma.module';
 import { UsersModule } from './users/users.module';
 
-const prisma = new PrismaClient();
-
 @Module({
-  imports: [UsersModule],
-  providers: [
-    {
-      provide: 'PRISMA',
-      useValue: prisma,
-    },
-  ],
-  exports: ['PRISMA'],
+  imports: [PrismaModule, UsersModule],
 })
 export class AppModule {}
