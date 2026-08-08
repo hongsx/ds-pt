@@ -1,0 +1,1 @@
+Remove obsolete `version` attribute from docker-compose.yml (Compose v2 uses the compose spec without a top-level `version` field).
