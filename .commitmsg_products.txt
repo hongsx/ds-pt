@@ -1,0 +1,1 @@
+Add ProductsModule (CRUD + pagination + search), Prisma schema and seed script to create tables and initial data.
