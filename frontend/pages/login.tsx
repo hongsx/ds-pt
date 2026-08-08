@@ -1,33 +1,29 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
+import { apiPost } from '../lib/api';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
+    if (!email) return setError('Email is required');
+    if (!password || password.length < 6) return setError('Password must be at least 6 characters');
+    setLoading(true);
     try {
-      const res = await fetch('http://localhost:3001/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        setError(body.message || 'Login failed');
-        return;
-      }
-      const data = await res.json();
-      if (data.accessToken) {
-        localStorage.setItem('accessToken', data.accessToken);
-        router.push('/');
-      }
-    } catch (err) {
-      setError('Network error');
+      await apiPost('auth/login', { email, password });
+      // Server sets HttpOnly cookie; redirect to home
+      router.push('/');
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || 'Login failed';
+      setError(msg);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -42,6 +38,7 @@ export default function LoginPage() {
             onChange={(e) => setEmail(e.target.value)}
             type="email"
             style={{ width: '100%', padding: 8 }}
+            required
           />
         </div>
         <div style={{ marginBottom: 12 }}>
@@ -51,10 +48,12 @@ export default function LoginPage() {
             onChange={(e) => setPassword(e.target.value)}
             type="password"
             style={{ width: '100%', padding: 8 }}
+            minLength={6}
+            required
           />
         </div>
         {error && <div style={{ color: 'red', marginBottom: 12 }}>{error}</div>}
-        <button type="submit" style={{ padding: '8px 16px' }}>Login</button>
+        <button type="submit" style={{ padding: '8px 16px' }} disabled={loading}>{loading ? 'Logging in...' : 'Login'}</button>
       </form>
     </main>
   );
