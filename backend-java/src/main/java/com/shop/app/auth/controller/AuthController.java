@@ -1,11 +1,13 @@
-package com.shop.app.auth.controller;
+package com.shop.app.auth;
 
-import com.shop.app.auth.JwtUtil;
-import com.shop.app.users.entity.User;
-import com.shop.app.users.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import com.shop.app.users.entity.User;
+import com.shop.app.users.service.UserService;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -47,6 +49,15 @@ public class AuthController {
         Map<String, Object> resp = new HashMap<>();
         resp.put("token", token);
         resp.put("user", Map.of("id", u.getId(), "email", u.getEmail()));
-        return ResponseEntity.ok(resp);
+
+        // set HttpOnly cookie as well
+        ResponseCookie cookie = ResponseCookie.from("jwt", token)
+                .httpOnly(true)
+                .path("/")
+                .maxAge(jwtUtil.getExpirationSeconds())
+                .sameSite("Lax")
+                .build();
+
+        return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, cookie.toString()).body(resp);
     }
 }
