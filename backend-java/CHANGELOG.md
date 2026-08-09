@@ -1,0 +1,1 @@
+Update docker-compose.yml to remove legacy Node backend and keep backend-java on port 3001; frontend now depends on backend-java.

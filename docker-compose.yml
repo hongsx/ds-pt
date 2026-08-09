@@ -19,22 +19,6 @@ services:
     volumes:
       - redis-data:/data
 
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    environment:
-      DATABASE_URL: mysql://ds_user:ds_pass@db:3306/ds_pt_dev
-      REDIS_URL: redis://redis:6379
-      PORT: 3001
-    ports:
-      - "3001:3001"
-    depends_on:
-      - db
-      - redis
-    volumes:
-      - ./backend:/app
-
   backend-java:
     build:
       context: ./backend-java
@@ -62,7 +46,7 @@ services:
     ports:
       - "3000:3000"
     depends_on:
-      - backend
+      - backend-java
     volumes:
       - ./frontend:/app
 
