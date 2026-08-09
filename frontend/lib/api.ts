@@ -123,4 +123,19 @@ export async function apiDelete(path: string) {
   return resp.data;
 }
 
+export async function apiLogout() {
+  try {
+    // call backend to revoke refresh token and clear cookies
+    await api.post('/auth/logout');
+  } catch (err) {
+    // ignore errors — still clear client state
+  }
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.removeItem('token');
+    } catch (e) {}
+    Router.push('/login');
+  }
+}
+
 export default api;
