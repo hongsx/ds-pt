@@ -48,8 +48,8 @@ public class ProductController {
         p.setTitle(req.getTitle());
         p.setDescription(req.getDescription());
         p.setPrice(req.getPrice() != null ? req.getPrice() : BigDecimal.ZERO);
-        productService.create(p);
-        return ResponseEntity.ok().build();
+        Product created = productService.create(p);
+        return ResponseEntity.status(201).body(created);
     }
 
     @PutMapping("/{id}")
@@ -59,8 +59,8 @@ public class ProductController {
         p.setTitle(req.getTitle());
         p.setDescription(req.getDescription());
         p.setPrice(req.getPrice());
-        productService.update(p);
-        return ResponseEntity.ok().build();
+        Product updated = productService.update(p);
+        return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{id}")

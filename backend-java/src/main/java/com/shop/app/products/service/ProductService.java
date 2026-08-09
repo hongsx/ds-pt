@@ -28,12 +28,14 @@ public class ProductService {
         return productMapper.selectById(id);
     }
 
-    public int create(Product product) {
-        return productMapper.insert(product);
+    public Product create(Product product) {
+        productMapper.insert(product);
+        return product;
     }
 
-    public int update(Product product) {
-        return productMapper.updateById(product);
+    public Product update(Product product) {
+        productMapper.updateById(product);
+        return product;
     }
 
     public int delete(Integer id) {

@@ -35,6 +35,24 @@ services:
     volumes:
       - ./backend:/app
 
+  backend-java:
+    build:
+      context: ./backend-java
+      dockerfile: Dockerfile
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: ds_pt_dev
+      DB_USER: ds_user
+      DB_PASS: ds_pass
+      JWT_SECRET: change_this_to_secure_secret
+    ports:
+      - "3001:3001"
+    depends_on:
+      - db
+    volumes:
+      - ./backend-java:/app
+
   frontend:
     build:
       context: ./frontend
