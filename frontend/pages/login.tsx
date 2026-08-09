@@ -16,8 +16,12 @@ export default function LoginPage() {
     if (!password || password.length < 6) return setError('Password must be at least 6 characters');
     setLoading(true);
     try {
-      await apiPost('auth/login', { email, password });
-      // Server sets HttpOnly cookie; redirect to home
+      const resp = await apiPost('auth/login', { email, password });
+      const token = resp?.token;
+      if (token && typeof window !== 'undefined') {
+        localStorage.setItem('token', token);
+      }
+      // Server may also set HttpOnly cookie; redirect to home
       router.push('/');
     } catch (err: any) {
       const msg = err?.response?.data?.message || err?.message || 'Login failed';

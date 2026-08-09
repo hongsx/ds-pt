@@ -9,6 +9,18 @@ const api = axios.create({
   },
 });
 
+// Request interceptor to add Authorization header if token exists
+api.interceptors.request.use((config) => {
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers = config.headers || {};
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
+  }
+  return config;
+});
+
 // Response interceptor to handle 401 globally
 api.interceptors.response.use(
   (response) => response,
