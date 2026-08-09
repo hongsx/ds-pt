@@ -9,6 +9,13 @@ const api = axios.create({
   },
 });
 
+// A small axios instance used only for refresh calls to avoid interceptors recursion
+const refreshClient = axios.create({
+  baseURL: '/api/proxy',
+  withCredentials: true,
+  headers: { 'Content-Type': 'application/json' },
+});
+
 // Request interceptor to add Authorization header if token exists
 api.interceptors.request.use((config) => {
   if (typeof window !== 'undefined') {
@@ -21,17 +28,77 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Response interceptor to handle 401 globally
+let isRefreshing = false;
+let refreshSubscribers: Array<(token: string | null) => void> = [];
+
+function subscribeTokenRefresh(cb: (token: string | null) => void) {
+  refreshSubscribers.push(cb);
+}
+
+function onRefreshed(token: string | null) {
+  refreshSubscribers.forEach((cb) => cb(token));
+  refreshSubscribers = [];
+}
+
+// Response interceptor to handle 401 globally and attempt refresh
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     const status = error?.response?.status;
+    const originalRequest = error?.config;
+
     if (status === 401) {
-      // Redirect to login page
-      if (typeof window !== 'undefined') {
-        Router.push('/login');
+      // If the request is the refresh call itself, redirect to login
+      if (originalRequest && originalRequest.url && originalRequest.url.includes('/auth/refresh')) {
+        if (typeof window !== 'undefined') Router.push('/login');
+        return Promise.reject(error);
+      }
+
+      // Avoid retrying infinitely
+      if (originalRequest && !originalRequest._retry) {
+        originalRequest._retry = true;
+
+        if (!isRefreshing) {
+          isRefreshing = true;
+          // call refresh endpoint
+          refreshClient
+            .post('/auth/refresh', null)
+            .then((resp) => {
+              const newToken = resp?.data?.token;
+              if (newToken && typeof window !== 'undefined') {
+                localStorage.setItem('token', newToken);
+              }
+              onRefreshed(newToken ?? null);
+            })
+            .catch((err) => {
+              onRefreshed(null);
+              if (typeof window !== 'undefined') Router.push('/login');
+            })
+            .finally(() => {
+              isRefreshing = false;
+            });
+        }
+
+        return new Promise((resolve, reject) => {
+          subscribeTokenRefresh((token) => {
+            if (token) {
+              // attach new token and retry original request
+              originalRequest.headers = originalRequest.headers || {};
+              originalRequest.headers['Authorization'] = `Bearer ${token}`;
+              resolve(api(originalRequest));
+            } else {
+              reject(error);
+            }
+          });
+        });
       }
     }
+
+    // Redirect on 401 if we can't handle it
+    if (status === 401) {
+      if (typeof window !== 'undefined') Router.push('/login');
+    }
+
     return Promise.reject(error);
   }
 );
